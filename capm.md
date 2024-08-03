@@ -81,7 +81,17 @@ $$
 $$
 
 ```r
-#fill the code
+df$Daily_AMD <- 0
+i <- 0
+for (i in 2:nrow(df)) {
+   df$Daily_AMD[i] <- (df$AMD[i] - df$AMD[i-1]) / df$AMD[i-1]
+ }
+i <- 0
+df$Daily_GSPC <- 0
+for (i in 2:nrow(gspc_df)) {
+   df$Daily_GSPC[i] <- (df$GSPC[i] - df$GSPC[i-1]) / df$GSPC[i-1]
+ }
+i <- 0
 ```
 
 - **Calculate Risk-Free Rate**: Calculate the daily risk-free rate by conversion of annual risk-free Rate. This conversion accounts for the compounding effect over the days of the year and is calculated using the formula:
@@ -91,21 +101,30 @@ $$
 $$
 
 ```r
-#fill the code
+i <- 0
+for (i in 1:nrow(df)){
+df$daily_RF[i] <- (1+df$RF[i]/100)^(1/360)-1
+}
 ```
 
 
 - **Calculate Excess Returns**: Compute the excess returns for AMD and the S&P 500 by subtracting the daily risk-free rate from their respective returns.
 
 ```r
-#fill the code
+df$AMD_excess <- 0
+ df$GSPC_excess <- 0
+i <- 0
+for (i in 1:nrow(df)){
+df$AMD_excess[i] <- df$Daily_AMD[i] - df$daily_RF[i] df$GSPC_excess[i] <- df$Daily_GSPC[i] - df$daily_RF[i]
+}
 ```
 
 
 - **Perform Regression Analysis**: Using linear regression, we estimate the beta (\(\beta\)) of AMD relative to the S&P 500. Here, the dependent variable is the excess return of AMD, and the independent variable is the excess return of the S&P 500. Beta measures the sensitivity of the stock's returns to fluctuations in the market.
 
 ```r
-#fill the code
+capm_model <- lm(AMD_excess ~ GSPC_excess, data = df)
+summary(capm_model)
 ```
 
 
@@ -114,13 +133,20 @@ $$
 What is your \(\beta\)? Is AMD more volatile or less volatile than the market?
 
 **Answer:**
+From the results recievied via linear regression, the beta coefficient for GSPC_Excess_Return is approximately 1.57, thereby indicating that AMD is more volatile than the market.This volatility stems from the cyclical semiconductor industry, competition with Intel and NVIDIA, and market sentiment towards tech stocks. Additionally, AMD’s financial performance and strategic decisions impact its volatility. For investors, a higher beta suggests higher potential returns but also higher risk, which is important for a diversified portfolio.
+
 
 
 #### Plotting the CAPM Line
 Plot the scatter plot of AMD vs. S&P 500 excess returns and add the CAPM regression line.
 
 ```r
-#fill the code
+ ggplot(df, aes(x = GSPC_excess, y = AMD_excess)) +
+   geom_point() +
+   geom_smooth(method = "lm", col = "blue") +
+   ggtitle("CAPM Analysis: AMD vs. S&P 500 Excess Returns") +
+   xlab("S&P 500 Excess Return") +
+   ylab("AMD Excess Return")
 ```
 
 ### Step 3: Predictions Interval
@@ -131,5 +157,26 @@ Suppose the current risk-free rate is 5.0%, and the annual expected return for t
 **Answer:**
 
 ```r
-#fill the code
+#given vals
+ current_risk <- 0.05
+ annual_exp_return <- 0.133
+ beta_amd <- 1.5700015
+ expected_return_amd <- current_risk + beta_amd * (annual_exp_return - current_risk)
+ cat("The expected return for AMD is:", expected_return_amd, "\n")
+
+
+ ## The expected return for AMD is: 0.1803101
+
+sf <- 0.02566
+ annualsf <- sf * sqrt(252)
+ confidence <- 0.90
+ z_score <- qnorm((1 + confidence) / 2)
+ margin_of_error <- z_score * annualsf
+ lower <- expected_return_amd - margin_of_error
+ upper <- expected_return_amd + margin_of_error
+
+cat("Thus for Lower Bound:", lower, "\n");
+## Thus for Lower Bound: -0.4897043
+ cat("And for Upper Bound:", upper, "\n");
+## And for Upper Bound: 0.8503246
 ```
