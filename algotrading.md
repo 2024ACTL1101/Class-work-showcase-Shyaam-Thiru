@@ -71,8 +71,17 @@ share_size <- 100
 accumulated_shares <- 0
 
 for (i in 1:nrow(amd_df)) {
-# Fill your code here
+current_price <- amd_df$close[i]
+if (previous_price == 0) {
+amd_df$trade_type[i] <- 'buy' amd_df$costs_proceeds[i] <- -current_price*share_size accumulated_shares <- accumulated_shares+share_size
+} else if (current_price < previous_price) { amd_df$trade_type[i] <- 'buy' amd_df$costs_proceeds[i] <- -current_price*share_size accumulated_shares <- accumulated_shares+share_size
+} else if (i == nrow(amd_df)) {
+amd_df$trade_type[i] <- 'sell'
+amd_df$costs_proceeds[i] <- accumulated_shares*current_price accumulated_shares <- 0
 }
+   amd_df$accumulated_shares[i] <- accumulated_shares
+   previous_price <- current_price
+ }
 ```
 
 
@@ -80,6 +89,11 @@ for (i in 1:nrow(amd_df)) {
 - Define a trading period you wanted in the past five years 
 ```r
 # Fill your code here
+#Set the Start Date
+start_date <- as.Date("2019-01-01")
+ #Set the End Date
+end_date <- as.Date("2024-05-17") #Determine the Trading Period
+ Trade_period <- amd_df[amd_df$date >= start_date & amd_df$date <= end_date, ]
 ```
 
 
@@ -92,6 +106,13 @@ After running your algorithm, check if the trades were executed as expected. Cal
 
 ```r
 # Fill your code here
+# Calculate total profit or loss
+total_profit_loss <- sum(Trade_period$costs_proceeds, na.rm = TRUE)
+ # Calculate total invested capital
+total_invested_capital <- -sum(Trade_period$costs_proceeds[Trade_period$trade_type == 'buy'], na.rm = TRUE) # Calculate ROI
+ ROI <- (total_profit_loss / total_invested_capital) * 100
+ #Display the determined values
+ print(total_profit_loss)
 ```
 
 ### Step 5: Profit-Taking Strategy or Stop-Loss Mechanisum (Choose 1)
@@ -101,6 +122,13 @@ After running your algorithm, check if the trades were executed as expected. Cal
 
 ```r
 # Fill your code here
+# Option 2 (20% Stop-loss)
+average_purchase_price <- mean(Trade_period$close[Trade_period$trade_type == 'buy'], na.rm = TRUE) stop_loss_threshold <- average_purchase_price * 0.80
+for (i in 1:nrow(Trade_period)) { current_price <- Trade_period$close[i]
+if (current_price < stop_loss_threshold & Trade_period$accumulated_shares[i] > 0) { Trade_period$trade_type[i] <- 'sell'
+Trade_period$costs_proceeds[i] <- Trade_period$accumulated_shares[i] * current_price / 2 Trade_period$accumulated_shares[i] <- Trade_period$accumulated_shares[i] / 2
+}
+}
 ```
 
 
@@ -113,7 +141,7 @@ After running your algorithm, check if the trades were executed as expected. Cal
 # Fill your code here and Disucss
 ```
 
-Sample Discussion: On Wednesday, December 6, 2023, AMD CEO Lisa Su discussed a new graphics processor designed for AI servers, with Microsoft and Meta as committed users. The rise in AMD shares on the following Thursday suggests that investors believe in the chipmaker's upward potential and market expectations; My first strategy earned X dollars more than second strategy on this day, therefore providing a better ROI.
+The trading algorithm was analyzed for the period from January 1st 2019 to May 17th 2024. During this period, the total profit/loss was $465849.0727 with a total invested capital of 5505756.98 resulting in an ROI of 84.6%. This was likely caused due to the excess demand of semiconductor products during this period whilst supply chain disruptions caused scarcity as a result of the global chip shortage from 2020- 2023. This led to increased volatility in stock prices, contributing to the fluctuations observed in the trading performance.
 
 
 
